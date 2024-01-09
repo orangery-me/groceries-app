@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shopping_app/data/categories.dart';
 import 'package:shopping_app/model/category.dart';
 import 'package:shopping_app/model/grocery_item.dart';
 import 'package:shopping_app/presentation/grocery/bloc/grocery_bloc.dart';
-import 'package:http/http.dart' as http;
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -31,27 +28,14 @@ class _NewItemState extends State<NewItem> {
     // validate is a method in Form(), which get the state of key and execute the validate
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final response = await http.post(url,
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode({
-            // id would be generated automatically
-            'name': _enteredName,
-            'quantity': _enteredQuantity,
-            'category': _selectedCategory.name
-          }));
 
-      print(response.body);
-      print(response.statusCode);
-
-      // final newItem = GroceryItem(
-      //     id: DateTime.now().toString(),
-      //     name: _enteredName,
-      //     quantity: _enteredQuantity,
-      //     category: _selectedCategory);
+      context.read<GroceryBloc>().add(PostGrocery(
+          newItem: GroceryItem(
+              name: _enteredName,
+              quantity: _enteredQuantity,
+              category: _selectedCategory)));
 
       if (!context.mounted) return;
-
-      // context.read<GroceryBloc>().add(AddGroceryItem(selectedItem: newItem));
       Navigator.of(context).pop();
     }
   }

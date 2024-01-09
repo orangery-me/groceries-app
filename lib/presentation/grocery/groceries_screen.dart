@@ -1,10 +1,8 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shopping_app/model/grocery_item.dart';
 import 'package:shopping_app/presentation/newItem/new_item.dart';
 import 'bloc/grocery_bloc.dart';
-import 'package:http/http.dart' as http;
 
 class GroceriesView extends StatelessWidget {
   const GroceriesView({super.key});
@@ -23,45 +21,41 @@ class GroceriesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: BlocBuilder<GroceryBloc, GroceryState>(
-          buildWhen: (previous, current) => previous.number != current.number,
-          builder: (context, state) {
-            log('title change');
-            return Text('Your Groceries ${state.number}');
-          },
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => BlocProvider.value(
-                        value: context.read<GroceryBloc>(),
-                        child: const NewItem(),
-                      )));
+    return BlocBuilder<GroceryBloc, GroceryState>(
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Your Groceries'),
+            actions: [
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context)
+                      .push(MaterialPageRoute(
+                          builder: (_) => BlocProvider.value(
+                                value: context.read<GroceryBloc>(),
+                                child: const NewItem(),
+                              )))
+                      .then((value) =>
+                          context.read<GroceryBloc>().add(GetGroceries()));
+                },
+                icon: const Icon(Icons.add),
+              )
+            ],
+          ),
+          body: Builder(
+            builder: (context) {
+              final groceryItems = context.watch<GroceryBloc>().state.items;
+              return Column(
+                children: [
+                  ...groceryItems
+                      .map((value) => GroceryItemWidget(groceryItem: value))
+                      .toList()
+                ],
+              );
             },
-            icon: const Icon(Icons.add),
-          )
-        ],
-      ),
-      body: Builder(builder: (context) {
-        // final groceryItems = context.watch<GroceryBloc>().state.items;
-        // final groceryItems =
-        // context.select((GroceryBloc bloc) => bloc.state.items);
-        final url = Uri.https('flutter-prep-41f1f-default-rtdb.firebaseio.com',
-            'shopping-list.json');
-
-        final groceryItems = http.get(url);
-
-        return Column(
-          children: [
-            ...groceryItems
-                .map((value) => GroceryItemWidget(groceryItem: value))
-                .toList()
-          ],
+          ),
         );
-      }),
+      },
     );
   }
 }

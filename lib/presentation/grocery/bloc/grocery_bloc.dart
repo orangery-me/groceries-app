@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:bloc/bloc.dart';
+import 'package:shopping_app/data/grocery_service.dart';
 import 'package:shopping_app/model/grocery_item.dart';
 
 part 'grocery_event.dart';
@@ -6,11 +10,31 @@ part 'grocery_state.dart';
 
 class GroceryBloc extends Bloc<GroceryEvent, GroceryState> {
   GroceryBloc() : super(const GroceryState()) {
-    on<AddGroceryItem>(_addGroceryItem);
+    on<GetGroceries>(_getGroceries);
+    on<PostGrocery>(_postGrocery);
+    add(GetGroceries());
   }
 
-  void _addGroceryItem(AddGroceryItem event, Emitter<GroceryState> emit) {
-    emit(state.copyWith(
-        items: [...state.items, event.selectedItem], number: state.number + 1));
+  Future<void> _getGroceries(
+      GetGroceries event, Emitter<GroceryState> emit) async {
+    try {
+      final groceries = await GroceryService().getGroceries();
+      emit(state.copyWith(items: groceries, number: state.number));
+    } catch (e) {
+      log(e.toString());
+      return;
+    }
+  }
+
+  // Future<void> _postGrocery
+
+  Future<void> _postGrocery(
+      PostGrocery event, Emitter<GroceryState> emit) async {
+    try {
+      await GroceryService().postGrocery(event.newItem);
+    } catch (e) {
+      log(e.toString());
+      return;
+    }
   }
 }

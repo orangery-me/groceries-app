@@ -8,13 +8,24 @@ class GroceryService {
 
   Future<List<GroceryItem>> getGroceries() async {
     final response = await http.get(url);
-    if (response.statusCode != 200) throw Exception('Can not get data');
-    final Map<String, Map<String, dynamic>> decodedGrocery =
-        jsonDecode(response.body);
-    final List<GroceryItem> groceries = [];
-    for (final item in decodedGrocery.entries) {
-      groceries.add(GroceryItem.fromMap(item.value));
+    if (response.statusCode != 200) {
+      throw Exception('Can not get data');
     }
+    final decodedGrocery = jsonDecode(response.body);
+
+    final groceries = <GroceryItem>[];
+    for (final item in decodedGrocery.keys) {
+      groceries.add(GroceryItem.fromMap(decodedGrocery[item]));
+    }
+
     return groceries;
+  }
+
+  Future<void> postGrocery(GroceryItem item) async {
+    final response = await http.post(url,
+        headers: {'Content-Type': 'application/json'}, body: item.toJson());
+    if (response.statusCode != 200) {
+      throw Exception('There is an error. Please try again later');
+    }
   }
 }
